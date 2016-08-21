@@ -1,0 +1,35 @@
+## Satellite-failover example config
+
+:failover:
+  :log: default
+  :priority: random
+  :capsule:
+    :url: https://uk.sat6.calvinh.com
+    :ip: 192.168.1.114
+    :priority:
+    :port:
+    :activationkey: "RHEL7"
+    :hostgroup:
+    :hostcollections:
+    :repos:
+    :usebootstrap: true
+    :services:
+      :puppet: true
+      :rhsm: true
+      :dns: false
+
+  :capsule:
+    :url: https://ie.sat6.calvinh.com
+    :ip: 192.168.1.111
+    :priority:
+    :port:
+    :activationkey: "RHEL7"
+    :hostgroup:
+    :hostcollections:
+    :repos:
+    :usebootstrap: true
+    :services:
+      :goferd: true
+      :puppet: true
+      :rhsm: true
+      :dns: false
