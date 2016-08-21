@@ -1,4 +1,4 @@
-# satellite-failover
+# satellite-failover: Satellite 6 Client failover script
 
 ## Description
 
@@ -23,4 +23,3 @@ Authors: Calvin Hartwell (cjh@redhat.com).
 
  ## How to use the script
  ## Script config file examples
- 
