@@ -61,79 +61,88 @@ def exec_failexit(command):
     print ""
 
 
-def parse_failover_config(configfile):
-    print_generic("Attempting to parse failover config")
-    with open(configfile, 'r') as stream:
+
+class Failoverset:
+    def __init__(self, configfile):
+        print_generic("Attempting to parse failover config")
+        self.defaults=dict()
+        self.capsules=dict()
+        with open(configfile, 'r') as stream:
+            try:
+                cfg=yaml.load(stream)
+                cfg.get('failover')
+            except yaml.YAMLError as exc:
+                print_error("unable to read %s: %s"%(configfile,exc))
+        
+        for key in ["configdir","log"]:
+            if cfg['failover'].get(key):
+                self.defaults[key] = cfg['failover'][key]
+        
+        print self.defaults
+        for i in cfg['failover']['capsules']:
+            cap = Capsule(i,self.defaults['configdir'])
+            self.capsules[cap.hostname] = cap
+            #print_error("capsule without name in %s"%(configfile))
+
+        self.currenthostname = self.getcurrentcapsule()
+
+
+    def getcurrentcapsule(self):
+        hostname=None
         try:
-            cfg=yaml.load(stream)
-        except yaml.YAMLError as exc:
-            print_error("unable to read %s: %s"%(configfile,exc))
+            proc = subprocess.Popen(['subscription-manager','config','--list'],stdout=subprocess.PIPE)
+            for line in proc.stdout.readlines():
+                #print "line=%s"%line
+                m=re.match(r" *hostname *= *\[?([\.\w]+)\]?",line)
+                if m:
+                    hostname = m.group(1)
+                    break
+        except Exception,e:
+            print_error("failed to get current capsule %s"%e)
+    
+        return hostname
+
+
+    def getnextcapsule(self):
+        nextcapsule = {}
+        for i in self.capsules.keys():
+            if self.capsules[i]['hostname'] == self.currenthostname:
+                next
+            if self.capsules[i]['priority'] > nextcapsule.get('priority',0):
+                nextcapsule=i
+
+        print "next:"
+        print nextcapsule
+        return nextcapsule
 
 
 
-    for i in range(0,len(cfg['failover']['capsules'])):
-        if not validatecapsule(cfg['failover']['capsules'][i]):
-            print_warning("capsule '%s' failed validation, ignoring"%(cfg['failover']['capsules'][i].get("name","unknown")))
-            del cfg['failover']['capsules'][i]
 
-    return cfg
+class Capsule:
+    def __init__(self,config,configdir):
+        if config.get("name") == None:
+            print_error("name attribute is required")
+            exit(1)
 
+        self.hostname = config.get("hostname",config.get("name"))
+        self.priority = config.get("priority",1)
+        self.configdir = config.get(configdir, configdir + "/" + self.hostname )
 
-def validatecapsule(capsule):
-    ## check required options
-    if capsule.get("name") == None:
-        print_warning("name attribute is required")
-        return False
+    def failover(self,configdir,config):
+        consumer = self.configdir + "/katello-rhsm-consumer"
+        print_running(consumer)
+        #exec_failexit(consumer)
+        #code = os.system(consumer)
+        #if code != 0:
+        #    print_error("unable to reconfigure to use %s"%(config['name']))
 
-    ## set some values to defaults if not present
-    if capsule.get("hostname") == None:
-        capsule['hostname']=capsule['name']
-
-    if capsule.get("priority") == None:
-        capsule['priority']=1
-
-    return True
-
-
-def failover(configdir,config):
-    consumer = configdir + "/" + config['name'] +"/katello-rhsm-consumer"
-    print_running(consumer)
-    #code = os.system(consumer)
-    #if code != 0:
-    #    print_error("unable to reconfigure to use %s"%(config['name']))
-
-    gofer="systemctl restart goferd"
-    print_running(gofer)
-    #code = os.system("systemctl restart goferd")
+        gofer="systemctl restart goferd"
+        print_running(gofer)
+        #exec_failexit(gofer)
+        #code = os.system("systemctl restart goferd")
     
 
 
-def getcurrentcapsule():
-    hostname=None
-    try:
-        proc = subprocess.Popen(['subscription-manager','config','--list'],stdout=subprocess.PIPE)
-        for line in proc.stdout.readlines():
-            #print "line=%s"%line
-            m=re.match(r" *hostname *= *\[?([\.\w]+)\]?",line)
-            if m:
-                hostname = m.group(1)
-                break
-    except Exception,e:
-        print_error("failed to get current capsule %s"%e)
-    
-    return hostname
-
-def getnextcapsule(currenthostname,config):
-    nextcapsule = {}
-    for i in config['failover']['capsules']:
-        if i['hostname'] == currenthostname:
-            next
-        if i['priority'] > nextcapsule.get('priority',0):
-            nextcapsule=i
-
-    print "next:"
-    print nextcapsule
-    return nextcapsule
 
 # Entry point
 def main():
@@ -157,4 +166,9 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = OptionParser()
+    parser.add_option("-c", "--config", dest="failover_config", help="Custom path to failover config yaml file", metavar="failover_config", default="/etc/satellite-failover.cfg")
+    (opt,args) = parser.parse_args()
+    #main()
+
+    Failoverset(opt.failover_config)
