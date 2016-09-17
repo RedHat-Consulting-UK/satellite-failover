@@ -19,7 +19,7 @@ error_colors = {
 
 def print_error(msg):
     print "[%sERROR%s], [%s], EXITING: [%s] failed to execute properly." % (error_colors['FAIL'], error_colors['ENDC'], datetime.now().strftime('%Y-%m-%d %H:%M:%S'), msg)
-
+    exit(1)
 
 def print_warning(msg):
     print "[%sWARNING%s], [%s], NON-FATAL: [%s] failed to execute properly." % (error_colors['WARNING'], error_colors['ENDC'], datetime.now().strftime('%Y-%m-%d %H:%M:%S'), msg)
@@ -98,7 +98,7 @@ class Failoverset:
                     hostname = m.group(1)
                     break
         except Exception,e:
-            print_error("failed to get current capsule %s"%e)
+            print_warning("failed to get current capsule %s"%e)
     
         return hostname
 
