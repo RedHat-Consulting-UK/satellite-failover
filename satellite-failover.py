@@ -39,26 +39,24 @@ def print_generic(msg):
 
 def exec_failok(command):
     print_running(command)
-    output = commands.getstatusoutput(command)
-    retcode = output[0]
-    if retcode != 0:
-        print_warning(command)
-    print output[1]
-    print ""
-    return retcode
+    output = ""
+    try:
+        output = subprocess.check_output(command)
+    except Exception,e:
+        print_warning("command \'%s\' failed: %s"%(command,e))
+
+    return output
 
 
 def exec_failexit(command):
     print_running(command)
-    output = commands.getstatusoutput(command)
-    retcode = output[0]
-    if retcode != 0:
-        print_error(command)
-        print output[1]
-        sys.exit(retcode)
-    print output[1]
-    print_success(command)
-    print ""
+    output = ""
+    try:
+        output = subprocess.check_output(command)
+    except Exception,e:
+        print_generic(output)
+        print_error("command \'%s\' failed: %s"%(command,e))
+    return output
 
 
 
@@ -133,21 +131,17 @@ class Capsule:
 
 
     def failover(self):
-        consumer = self.configdir + "/katello-rhsm-consumer"
-        print_running(consumer)
-        #exec_failexit(consumer)
-        #code = os.system(consumer)
-        #if code != 0:
-        #    print_error("unable to reconfigure to use %s"%(config['name']))
+        consumer = [self.configdir + "/katello-rhsm-consumer"]
+        #print_running(consumer)
+        exec_failexit(consumer)
 
-        clean="yum clean all"
-        print_running(clean)
-        #exec_failexit(clean)
+        clean=["/usr/bin/yum","clean","all"]
+        #print_running(clean)
+        exec_failexit(clean)
 
-        gofer="systemctl restart goferd"
-        print_running(gofer)
-        #exec_failexit(gofer)
-        #code = os.system("systemctl restart goferd")
+        gofer=["systemctl","restart","goferd"]
+        #print_running(gofer)
+        exec_failexit(gofer)
     
 
 
