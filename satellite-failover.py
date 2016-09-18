@@ -140,6 +140,10 @@ class Capsule:
         #if code != 0:
         #    print_error("unable to reconfigure to use %s"%(config['name']))
 
+        clean="yum clean all"
+        print_running(clean)
+        #exec_failexit(clean)
+
         gofer="systemctl restart goferd"
         print_running(gofer)
         #exec_failexit(gofer)
