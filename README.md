@@ -6,7 +6,11 @@ Python script which allows Red Hat Satellite 6 clients either directly connect t
 
 The idea is to allow the client to fail over automatically instead of relying on the Satellite 6 infrastructure to be resilient.
 
-Authors: Calvin Hartwell (cjh@redhat.com).
+Authors: Calvin Hartwell (cjh@redhat.com), Chris Procter (cprocter@redhat.com)
+
+## Current Functionality
+Runs as a one shot scrit that will chose the highest priority capsule from the config file and fail Pulp (yum) functionality over to it by using multiple copies of the katello-rhsm-consumer script (as delivered by the katello-ca-consumer rpm) stored in different config directories. A better description of setup is needed here! Currently this only works failing between multiple capsules attached to the same masster to simplify the complexity of subscribing and entitlments.
+
 
 ## The script has the following planned functionality:
 
