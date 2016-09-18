@@ -152,26 +152,6 @@ class Capsule:
 
 
 
-# Entry point
-def main():
-    
-    parser = OptionParser()
-    parser.add_option("-c", "--config", dest="failover_config", help="Custom path to failover config yaml file", metavar="failover_config", default="/etc/satellite-failover.cfg")
-    (opt,args) = parser.parse_args()
-
-
-    config=parse_failover_config(opt.failover_config)
-    
-    print config
-    #print config['failover']['capsules']
-
-    currentcapsule = getcurrentcapsule()
-
-    capsuleconfig = getnextcapsule(currentcapsule,config) 
-
-    failover(config['failover']['config'], capsuleconfig)
-
-
 
 if __name__ == "__main__":
     parser = OptionParser()
