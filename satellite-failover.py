@@ -78,7 +78,7 @@ class Failoverset:
             if cfg['failover'].get(key):
                 self.defaults[key] = cfg['failover'][key]
         
-        print self.defaults
+        #print self.defaults
         for i in cfg['failover']['capsules']:
             cap = Capsule(i,self.defaults['configdir'])
             self.capsules[cap.hostname] = cap
@@ -104,18 +104,21 @@ class Failoverset:
 
 
     def getnextcapsule(self):
-        nextcapsule = {}
+        nextcapsule = "" 
         for i in self.capsules.keys():
-            if self.capsules[i]['hostname'] == self.currenthostname:
+            if self.capsules[i].hostname == self.currenthostname:
                 next
-            if self.capsules[i]['priority'] > nextcapsule.get('priority',0):
+            if nextcapsule == "" or ( self.capsules[i].priority > self.capsules[nextcapsule].priority):
                 nextcapsule=i
 
-        print "next:"
-        print nextcapsule
         return nextcapsule
 
 
+    def failover(self):
+        nextcapsule = self.getnextcapsule()
+        print_generic("failing over to %s"%nextcapsule)
+        self.capsules[nextcapsule].failover()
+	
 
 
 class Capsule:
@@ -126,9 +129,10 @@ class Capsule:
 
         self.hostname = config.get("hostname",config.get("name"))
         self.priority = config.get("priority",1)
-        self.configdir = config.get(configdir, configdir + "/" + self.hostname )
+        self.configdir = config.get("configdir", configdir + "/" + self.hostname )
 
-    def failover(self,configdir,config):
+
+    def failover(self):
         consumer = self.configdir + "/katello-rhsm-consumer"
         print_running(consumer)
         #exec_failexit(consumer)
@@ -171,4 +175,5 @@ if __name__ == "__main__":
     (opt,args) = parser.parse_args()
     #main()
 
-    Failoverset(opt.failover_config)
+    fs=Failoverset(opt.failover_config)
+    fs.failover()
